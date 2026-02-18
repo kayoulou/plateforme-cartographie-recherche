@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Statistiques Système')}">
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <!-- Hero Banner -->
+        <div class="hero-header text-center text-md-start">
+            <div class="container">
+                <h2 class="hero-title">Statistiques Détaillées</h2>
+                <p class="mb-0 opacity-75">Analyse approfondie des projets, des participants et des budgets.</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container dashboard-container" style="margin-top: -30px;">
+
+            <!-- Key Metrics -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card blue text-center">
+                        <div class="stat-value" th:text="${totalProjets}">0</div>
+                        <div class="stat-label">Projets Totaux</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card purple text-center"
+                        style="background: linear-gradient(135deg, #6fd3f7 0%, #29b6f6 100%); color: white;">
+                        <div class="stat-value"
+                            th:text="${#numbers.formatDecimal(budgetTotal != null ? budgetTotal : 0, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">
+                            0 FCFA</div>
+                        <div class="stat-label">Budget Global</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card green text-center">
+                        <div class="stat-value"
+                            th:text="${#numbers.formatDecimal(avancementMoyen != null ? avancementMoyen : 0, 1, 'COMMA', 1, 'POINT')} + '%'">
+                            0%</div>
+                        <div class="stat-label">Avancement Moyen</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row (Copied from Gestionnaire Dashboard) -->
+            <div class="row g-4 mb-4">
+                <!-- Chart 1: Projets par Domaine -->
+                <div class="col-md-6">
+                    <div class="custom-card h-100">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Projets par Domaine</h5>
+                        <canvas id="domaineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Statut des Projets -->
+                <div class="col-md-6">
+                    <div class="custom-card h-100">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Répartition par Statut</h5>
+                        <canvas id="statutChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Budget par Domaine -->
+                <div class="col-12">
+                    <div class="custom-card">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Budget par Domaine de Recherche</h5>
+                        <canvas id="budgetChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Charts Row -->
+            <div class="row g-4 mb-4">
+                <!-- Chart 4: Évolution Temporelle -->
+                <div class="col-md-6">
+                    <div class="custom-card h-100">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Évolution Temporelle des Projets</h5>
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 5: Charge des Participants -->
+                <div class="col-md-6">
+                    <div class="custom-card h-100">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Charge des Participants</h5>
+                        <canvas id="participantChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Data Injection for Chart.js -->
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const statsDomaine = /*[[${statsDomaine}]]*/ {};
+            const statsStatut = /*[[${statsStatut}]]*/ {};
+            const statsBudget = /*[[${statsBudgetDomaine}]]*/ {};
+            const statsParticipant = /*[[${statsParticipant}]]*/ {};
+            const statsEvolution = /*[[${statsEvolution}]]*/ {};
+
+            // 1. Domaine Chart (Bar Chart)
+            new Chart(document.getElementById('domaineChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statsDomaine),
+                    datasets: [{
+                        label: 'Projets',
+                        data: Object.values(statsDomaine),
+                        backgroundColor: '#3a86ff',
+                        borderRadius: 5
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+
+            // 2. Statut Chart (Pie Chart)
+            new Chart(document.getElementById('statutChart'), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statsStatut),
+                    datasets: [{
+                        data: Object.values(statsStatut),
+                        backgroundColor: [
+                            '#ffc107', // En cours (Yellow)
+                            '#28a745', // Terminé (Green)
+                            '#dc3545', // Suspendu (Red)
+                            '#6c757d'  // Autre (Grey)
+                        ]
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            // 3. Budget Chart (Bar Chart)
+            new Chart(document.getElementById('budgetChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statsBudget),
+                    datasets: [{
+                        label: 'Budget (FCFA)',
+                        data: Object.values(statsBudget),
+                        backgroundColor: '#8338ec',
+                        borderRadius: 5
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+
+            // 4. Evolution Chart (Line Chart)
+            new Chart(document.getElementById('evolutionChart'), {
+                type: 'line',
+                data: {
+                    labels: Object.keys(statsEvolution),
+                    datasets: [{
+                        label: 'Nouveaux Projets',
+                        data: Object.values(statsEvolution),
+                        borderColor: '#ff006e',
+                        backgroundColor: 'rgba(255, 0, 110, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+
+            // 5. Participant Chart (Horizontal Bar Chart)
+            new Chart(document.getElementById('participantChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statsParticipant),
+                    datasets: [{
+                        label: 'Projets par Participant',
+                        data: Object.values(statsParticipant),
+                        backgroundColor: '#fb5607',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal Bar
+                    responsive: true,
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+            /*]]>*/
+        </script>
+
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>

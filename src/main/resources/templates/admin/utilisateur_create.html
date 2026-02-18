@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Créer Utilisateur')}">
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <div class="hero-header">
+            <div class="container">
+                <h2 class="hero-title">Créer Utilisateur</h2>
+                <p class="mb-0 opacity-75">Ajouter un nouvel utilisateur au système.</p>
+            </div>
+        </div>
+
+        <div class="container dashboard-container" style="margin-top: -30px;">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="custom-card">
+
+                        <form th:action="@{/admin/users/create}" method="post" th:object="${utilisateurDto}">
+
+                            <!-- Success/Error Alerts -->
+                            <div th:if="${error}" class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i><span
+                                    th:text="${error}">Erreur</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" required
+                                    placeholder="ex : utilisateur@esmt.sn">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="prenom" class="form-label">Prénom <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="prenom" th:field="*{prenom}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="nom" class="form-label">Nom <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nom" th:field="*{nom}" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="role" class="form-label">Rôle <span class="text-danger">*</span></label>
+                                <select class="form-select" id="role" th:field="*{libelleRole}" required>
+                                    <option value="CANDIDAT">Candidat</option>
+                                    <option value="GESTIONNAIRE">Gestionnaire</option>
+                                    <option value="ADMIN">Administrateur</option>
+                                </select>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                L'utilisateur sera créé localement avec le mot de passe par défaut
+                                <strong>12345678</strong>.
+                                <br>
+                                Il faudra ensuite utiliser le bouton <strong>"Sync Cloud"</strong> pour le créer dans
+                                Keycloak.
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/admin/users}" class="btn btn-light">Annuler</a>
+                                <button type="submit" class="btn btn-success px-4">Créer l'utilisateur</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>

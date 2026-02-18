@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Tableau de Bord - Administrateur')}">
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <!-- Hero Banner -->
+        <div class="hero-header text-center text-md-start">
+            <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div>
+                    <h2 class="hero-title">Administration Système</h2>
+                    <p class="mb-0 opacity-75">Gestion des utilisateurs, des rôles et des paramètres globaux.</p>
+                </div>
+                <div>
+                    <a th:href="@{/projets/tous}" class="btn btn-light text-primary fw-bold mt-3 mt-md-0">
+                        <i class="bi bi-list-ul me-2"></i> Liste des Projets
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container dashboard-container" style="margin-top: -30px;">
+
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card blue h-100">
+                        <div>
+                            <div class="stat-value" th:text="${totalUtilisateurs}">120</div>
+                            <div class="stat-label">Utilisateurs</div>
+                        </div>
+                        <i class="bi bi-people display-4 opacity-50"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card green h-100">
+                        <div>
+                            <div class="stat-value" th:text="${totalDomaines}">6</div>
+                            <div class="stat-label">Domaines</div>
+                        </div>
+                        <i class="bi bi-diagram-3 display-4 opacity-50"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <a th:href="@{/projets/tous}" class="text-decoration-none">
+                        <div class="stat-card orange h-100">
+                            <div>
+                                <div class="stat-value text-white" th:text="${totalProjets}">42</div>
+                                <div class="stat-label text-white-50">Projets Totaux (Voir)</div>
+                                <div th:if="${projetsEnRetard > 0}" class="mt-1">
+                                    <span class="badge bg-danger text-white border border-light">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> <span
+                                            th:text="${projetsEnRetard}">0</span> En Retard
+                                    </span>
+                                </div>
+                            </div>
+                            <i class="bi bi-collection display-4 opacity-50 text-white"></i>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card purple h-100"
+                        style="background: linear-gradient(135deg, #6fd3f7 0%, #29b6f6 100%); color: white;">
+                        <div>
+                            <div class="stat-value" style="font-size: 1.8rem; line-height: 1.2;">
+                                <span
+                                    th:text="${budgetTotal != null ? #numbers.formatDecimal(budgetTotal, 0, 'WHITESPACE', 0, 'POINT') : '0'}">10M</span>
+                                <small style="font-size: 1rem; display: block;">FCFA</small>
+                            </div>
+                            <div class="stat-label">Budget Engagé</div>
+                            <div class="stat-label small text-white-50 mt-1">
+                                Restant: <span
+                                    th:text="${budgetRestant != null ? #numbers.formatDecimal(budgetRestant, 0, 'WHITESPACE', 0, 'POINT') : '0'}">0</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-cash-coin display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- User Management Link -->
+                <div class="col-md-3">
+                    <div class="custom-card h-100 text-center p-4">
+                        <i class="bi bi-person-gear display-4 text-primary mb-3"></i>
+                        <h5>Gestion Utilisateurs</h5>
+                        <p class="text-muted small">Rôles, Activation.</p>
+                        <a th:href="@{/admin/users}" class="btn btn-sm btn-primary mt-1">Gérer</a>
+                    </div>
+                </div>
+
+                <!-- Domain Management Link -->
+                <div class="col-md-3">
+                    <div class="custom-card h-100 text-center p-4">
+                        <i class="bi bi-gear-wide-connected display-4 text-success mb-3"></i>
+                        <h5>Configuration</h5>
+                        <p class="text-muted small">Domaines & Paramètres.</p>
+                        <a th:href="@{/admin/config}" class="btn btn-sm btn-success mt-1">Configurer</a>
+                    </div>
+                </div>
+
+                <!-- Stats Link -->
+                <div class="col-md-3">
+                    <div class="custom-card h-100 text-center p-4">
+                        <i class="bi bi-bar-chart-line display-4 text-info mb-3"></i>
+                        <h5>Statistiques</h5>
+                        <p class="text-muted small">Visualiser les graphiques.</p>
+                        <a th:href="@{/admin/stats}" class="btn btn-sm btn-info text-white mt-1">Voir Stats</a>
+                    </div>
+                </div>
+
+                <!-- Audit Link -->
+                <div class="col-md-3">
+                    <div class="custom-card h-100 text-center p-4">
+                        <i class="bi bi-shield-check display-4 text-secondary mb-3"></i>
+                        <h5>Audit Logs</h5>
+                        <p class="text-muted small">Traçabilité du système.</p>
+                        <a th:href="@{/admin/audit}" class="btn btn-sm btn-secondary mt-1">Voir Logs</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Detailed Statistics (Same as Gestionnaire) -->
+            <!-- Detailed stats removed -->
+        </div>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>

@@ -1,0 +1,141 @@
+{
+  "realm": "plateforme-recherche",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Administrateur système"
+      },
+      {
+        "name": "GESTIONNAIRE",
+        "description": "Gestionnaire de projets"
+      },
+      {
+        "name": "CANDIDAT",
+        "description": "Utilisateur simple"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@esmt.sn",
+      "firstName": "Loîc",
+      "lastName": "COMPAORE",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "username": "gestionnaire",
+      "enabled": true,
+      "email": "gestionnaire@esmt.sn",
+      "firstName": "Jordan",
+      "lastName": "SAWADOGO",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "gestionnaire",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "GESTIONNAIRE"
+      ]
+    },
+    {
+      "username": "candidat",
+      "enabled": true,
+      "email": "candidat@esmt.sn",
+      "firstName": "Josée",
+      "lastName": "OUEDRAOGO",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "candidat",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CANDIDAT"
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "spring-client",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "redirectUris": [
+        "http://localhost:8082/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "secret": "secret-key",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "client roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "google",
+      "providerId": "google",
+      "enabled": true,
+      "updateProfileFirstLoginMode": "on",
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "authenticateByDefault": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "clientId": "1079329513812-ri9485apuig8pkspj2q9630ugms6fubv.apps.googleusercontent.com",
+        "clientSecret": "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"
+      }
+    }
+  ]
+}

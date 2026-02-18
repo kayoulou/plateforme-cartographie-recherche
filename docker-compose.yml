@@ -1,0 +1,27 @@
+services:
+  keycloak:
+    container_name: keycloak_projet
+    image: quay.io/keycloak/keycloak:24.0.1
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak-realm-config.json:/opt/keycloak/data/import/realm.json
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+  # Optional: PHPMyAdmin to view the MySQL DB if needed
+  # phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin
+  #   links:
+  #     - db
+  #   environment:
+  #     PMA_HOST: db
+  #   ports:
+  #     - "8081:80"
+
+networks:
+  app-network:
+    driver: bridge

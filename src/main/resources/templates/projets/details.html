@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Détails du Projet')}">
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <div class="hero-header">
+            <div class="container">
+                <h2 class="hero-title" th:text="${projet.titre}">Titre du Projet</h2>
+                <p class="mb-0 opacity-75">Détails complets du projet de recherche.</p>
+            </div>
+        </div>
+
+        <div class="container dashboard-container" style="margin-top: -30px;">
+            <div class="custom-card">
+
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <span class="badge bg-primary me-2" th:text="${projet.domaineNom}">Domaine</span>
+                        <span class="status-badge"
+                            th:classappend="${projet.statut == 'En cours'} ? 'status-en-cours' : (${projet.statut == 'Terminé'} ? 'status-termine' : 'status-suspendu')"
+                            th:text="${projet.statut}">Statut</span>
+                    </div>
+                    <a th:href="@{/projets/tous}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <h5 class="fw-bold border-bottom pb-2 mb-3">Description</h5>
+                        <p class="text-secondary" th:text="${projet.description}">Description du projet...</p>
+
+                        <div class="row mt-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Institution</label>
+                                <div class="fw-bold" th:text="${projet.institution}">Institution</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Budget Estimé</label>
+                                <div class="fw-bold text-success" th:text="${projet.budgetEstime} + ' FCFA'">10 000 FCFA
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Date de Début</label>
+                                <div class="fw-bold" th:text="${projet.dateDebut}">01/01/2024</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Date de Fin Prévue</label>
+                                <div class="fw-bold" th:text="${projet.dateFin}">31/12/2024</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="bg-light p-4 rounded-3 border">
+                            <h6 class="fw-bold mb-3">Responsable du Projet</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="avatar-circle me-3"
+                                    th:text="${projet.responsableNom != null ? #strings.substring(projet.responsableNom,0,1) : (projet.createurPrenom != null ? #strings.substring(projet.createurPrenom,0,1) : '?')}">U</span>
+                                <div>
+                                    <div class="fw-bold"
+                                        th:text="${projet.responsableNom != null ? projet.responsableNom : (projet.createurPrenom + ' ' + projet.createurNom)}">
+                                        Nom Prénom
+                                    </div>
+                                    <small class="text-muted"
+                                        th:text="${projet.responsableNom != null ? 'Responsable désigné' : 'Créateur du projet'}">Rôle</small>
+                                </div>
+                            </div>
+
+                            <div th:if="${projet.participantNames != null and !projet.participantNames.isEmpty()}"
+                                class="mb-3">
+                                <hr>
+                                <h6 class="fw-bold mb-2">Participants (<span
+                                        th:text="${projet.participantNames.size()}">0</span>)</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li th:each="p : ${projet.participantNames}" class="mb-1 text-muted small">
+                                        <i class="bi bi-person-check me-2 text-primary"></i>
+                                        <span th:text="${p}">Nom Participant</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <hr>
+
+                            <h6 class="fw-bold mb-3">Progression</h6>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar" role="progressbar"
+                                    th:style="'width: ' + ${projet.niveauAvancement} + '%;'"
+                                    th:aria-valuenow="${projet.niveauAvancement}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-1">
+                                <span class="fw-bold small" th:text="${projet.niveauAvancement} + '%'">45%</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 text-center">
+                            <a th:href="@{/projets/modifier/{id}(id=${projet.id})}" class="btn btn-primary w-100">
+                                <i class="bi bi-pencil me-2"></i> Modifier le Projet
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>

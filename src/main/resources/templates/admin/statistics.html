@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Statistiques - Administrateur')}">
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <!-- Hero Banner -->
+        <div class="hero-header text-center text-md-start">
+            <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div>
+                    <h2 class="hero-title">Statistiques Détaillées</h2>
+                    <p class="mb-0 opacity-75">Analyse approfondie des données de la plateforme.</p>
+                </div>
+                <div>
+                    <a th:href="@{/stats/rapport}" class="btn btn-outline-light mt-3 mt-md-0 me-2">
+                        <i class="bi bi-download"></i> Générer Rapport
+                    </a>
+                    <a th:href="@{/admin/dashboard}" class="btn btn-light text-primary fw-bold mt-3 mt-md-0">
+                        <i class="bi bi-arrow-left me-2"></i> Retour Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container dashboard-container" style="margin-top: -30px;">
+
+            <!-- Stats Cards Row (Simplified compared to Dashboard, focusing on charts mainly, but cards are good context) -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card blue h-100">
+                        <div>
+                            <div class="stat-value" th:text="${totalProjets != null ? totalProjets : '0'}">42</div>
+                            <div class="stat-label">Projets Totaux</div>
+                            <div th:if="${projetsEnRetard > 0}" class="stat-label small text-danger mt-1 fw-bold">
+                                <i class="bi bi-exclamation-triangle-fill"></i> <span
+                                    th:text="${projetsEnRetard}">0</span> En Retard
+                            </div>
+                        </div>
+                        <i class="bi bi-folder2-open display-4 opacity-50"></i>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card green h-100">
+                        <div>
+                            <div class="stat-value"
+                                th:text="${avancementMoyen != null ? #numbers.formatDecimal(avancementMoyen, 0, 0) : '0'} + '%'">
+                                65%</div>
+                            <div class="stat-label">Avancement Global</div>
+                        </div>
+                        <i class="bi bi-bar-chart-steps display-4 opacity-50"></i>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card orange h-100">
+                        <div>
+                            <div class="stat-value" style="font-size: 1.8rem; line-height: 1.2;">
+                                <span
+                                    th:text="${budgetTotal != null ? #numbers.formatDecimal(budgetTotal, 0, 'WHITESPACE', 0, 'POINT') : '0'}">10M</span>
+                                <small style="font-size: 1rem; display: block;">FCFA</small>
+                            </div>
+                            <div class="stat-label">Budget Engagé</div>
+                            <div class="stat-label small text-white-50 mt-1">
+                                Restant: <span
+                                    th:text="${budgetRestant != null ? #numbers.formatDecimal(budgetRestant, 0, 'WHITESPACE', 0, 'POINT') : '0'}">0</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-currency-exchange display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row g-4">
+                <!-- Chart 1: Projets par Domaine -->
+                <div class="col-md-6">
+                    <div class="custom-card h-100">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Projets par Domaine</h5>
+                        <canvas id="domaineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Statut des Projets -->
+                <div class="col-md-6">
+                    <div class="custom-card h-100">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Répartition par Statut</h5>
+                        <canvas id="statutChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Budget par Domaine -->
+                <div class="col-12">
+                    <div class="custom-card">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Budget par Domaine de Recherche</h5>
+                        <canvas id="budgetChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Charts Row -->
+            <div class="row g-4 mt-2">
+                <!-- Chart 4: Évolution Temporelle -->
+                <div class="col-md-6">
+                    <div class="custom-card h-100">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Évolution Temporelle des Projets</h5>
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 5: Charge des Participants -->
+                <div class="col-md-6">
+                    <div class="custom-card h-100">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">Charge des Participants</h5>
+                        <canvas id="participantChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Data Injection for Chart.js -->
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const statsDomaine = /*[[${statsDomaine}]]*/ {};
+            const statsStatut = /*[[${statsStatut}]]*/ {};
+            const statsBudget = /*[[${statsBudgetDomaine}]]*/ {};
+            const statsParticipant = /*[[${statsParticipant}]]*/ {};
+            const statsEvolution = /*[[${statsEvolution}]]*/ {};
+
+            // 1. Domaine Chart (Bar Chart)
+            new Chart(document.getElementById('domaineChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statsDomaine),
+                    datasets: [{
+                        label: 'Projets',
+                        data: Object.values(statsDomaine),
+                        backgroundColor: '#3a86ff',
+                        borderRadius: 5
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+
+            // 2. Statut Chart (Pie Chart)
+            new Chart(document.getElementById('statutChart'), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statsStatut),
+                    datasets: [{
+                        data: Object.values(statsStatut),
+                        backgroundColor: [
+                            '#ffc107', // En cours (Yellow)
+                            '#28a745', // Terminé (Green)
+                            '#dc3545', // Suspendu (Red)
+                            '#6c757d'  // Autre (Grey)
+                        ]
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            // 3. Budget Chart (Bar Chart)
+            new Chart(document.getElementById('budgetChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statsBudget),
+                    datasets: [{
+                        label: 'Budget (FCFA)',
+                        data: Object.values(statsBudget),
+                        backgroundColor: '#8338ec',
+                        borderRadius: 5
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+
+            // 4. Evolution Chart (Bar Chart - Explicit)
+            const sortedYears = Object.keys(statsEvolution).sort();
+            const sortedCounts = sortedYears.map(year => statsEvolution[year]);
+
+            new Chart(document.getElementById('evolutionChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedYears,
+                    datasets: [{
+                        label: 'Projets Créés',
+                        data: sortedCounts,
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Nombre de Projets' },
+                            ticks: { stepSize: 1 }
+                        },
+                        x: {
+                            title: { display: true, text: 'Année' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.parsed.y + ' projet(s) créé(s) en ' + context.label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 5. Participant Chart (Horizontal Bar Chart)
+            new Chart(document.getElementById('participantChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statsParticipant),
+                    datasets: [{
+                        label: 'Projets par Participant',
+                        data: Object.values(statsParticipant),
+                        backgroundColor: '#fb5607',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal Bar
+                    responsive: true,
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+            /*]]>*/
+        </script>
+
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>

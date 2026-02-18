@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Liste Globale des Projets')}">
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <div class="hero-header">
+            <div class="container d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="hero-title">Répertoire des Projets</h2>
+                    <p class="mb-0 opacity-75">Vue d'ensemble de tous les projets de recherche.</p>
+                </div>
+                <div>
+                    <a th:href="@{/csv/upload}" class="btn btn-light text-primary fw-bold">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i> Importer CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container dashboard-container" style="margin-top: -30px;">
+
+            <div class="custom-card">
+
+                <form th:action="@{/projets/tous}" method="get"
+                    class="d-flex justify-content-between align-items-center mb-4 w-100">
+                    <div class="d-flex gap-2">
+                        <select name="statut" class="form-select form-select-sm" style="width: 150px;"
+                            onchange="this.form.submit()">
+                            <option value="">Tous les Statuts</option>
+                            <option value="En cours" th:selected="${statut == 'En cours'}">En cours</option>
+                            <option value="Terminé" th:selected="${statut == 'Terminé'}">Terminé</option>
+                            <option value="Suspendu" th:selected="${statut == 'Suspendu'}">Suspendu</option>
+                        </select>
+                        <select name="domaine" class="form-select form-select-sm" style="width: 150px;"
+                            onchange="this.form.submit()">
+                            <option value="">Tous les Domaines</option>
+                            <option th:each="d : ${domaines}" th:value="${d.nom}" th:text="${d.nom}"
+                                th:selected="${domaine == d.nom}"></option>
+                        </select>
+                    </div>
+
+                    <div class="input-group w-auto">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="keyword" class="form-control border-start-0 ps-0"
+                            placeholder="Rechercher..." th:value="${keyword}">
+                        <button type="submit" class="btn btn-primary btn-sm ms-2">Filtrer</button>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Projet</th>
+                                <th>Responsable</th>
+                                <th>Domaine</th>
+                                <th>Budget</th>
+                                <th>Statut</th>
+                                <th>Avancement</th>
+                                <th class="text-end">Détails</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${projets}">
+                                <td>
+                                    <div class="fw-bold text-dark">
+                                        <span th:text="${p.titre}">Titre Projet</span>
+                                        <span
+                                            th:if="${p.dateFin != null and p.dateFin.isBefore(#temporals.createToday()) and p.niveauAvancement < 100}"
+                                            class="badge bg-danger ms-2" style="font-size: 0.7em;"
+                                            title="Date de fin dépassée !">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Retard
+                                        </span>
+                                    </div>
+                                    <small class="text-muted" th:text="${p.institution}">Institution</small>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="avatar-circle-sm me-2"
+                                            th:text="${p.createurPrenom != null ? #strings.substring(p.createurPrenom,0,1) : '?'}">U</span>
+                                        <span
+                                            th:text="${p.createurPrenom != null ? p.createurPrenom + ' ' + p.createurNom : 'Inconnu'}">Nom
+                                            User</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border"
+                                        th:text="${p.domaineNom != null ? p.domaineNom : 'N/A'}">Domaine</span>
+                                </td>
+                                <td th:text="${p.budgetEstime} + ' FCFA'">10 000 FCFA</td>
+                                <td>
+                                    <span class="status-badge"
+                                        th:classappend="${p.statut == 'En cours'} ? 'status-en-cours' : (${p.statut == 'Terminé'} ? 'status-termine' : 'status-suspendu')"
+                                        th:text="${p.statut}">En Cours</span>
+                                </td>
+                                <td style="width: 15%;">
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar rounded-pill" role="progressbar"
+                                            th:style="'width: ' + ${p.niveauAvancement} + '%; background-color: var(--primary-blue-light);'"
+                                            th:aria-valuenow="${p.niveauAvancement}" aria-valuemin="0"
+                                            aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted" th:text="${p.niveauAvancement} + '%'"></small>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end">
+                                        <a th:href="@{/projets/modifier/{id}(id=${p.id})}"
+                                            class="btn btn-sm btn-light text-primary me-1" title="Modifier"><i
+                                                class="bi bi-pencil"></i></a>
+                                        <a th:href="@{/projets/details/{id}(id=${p.id})}"
+                                            class="btn btn-sm btn-light text-secondary me-1" title="Détails"><i
+                                                class="bi bi-eye"></i></a>
+
+                                        <form th:action="@{/projets/supprimer}" method="post"
+                                            sec:authorize="hasRole('ADMIN')"
+                                            onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');">
+                                            <input type="hidden" name="id" th:value="${p.id}" />
+                                            <button type="submit" class="btn btn-sm btn-light text-danger"
+                                                title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination (Placeholder) -->
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled"><a class="page-link" href="#"><i
+                                    class="bi bi-chevron-left"></i></a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a></li>
+                    </ul>
+                </nav>
+
+            </div>
+        </div>
+
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>

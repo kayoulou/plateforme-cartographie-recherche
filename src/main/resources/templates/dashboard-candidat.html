@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Tableau de Bord - Candidat')}">
+<!-- Note: The th:replace syntax assumes the layout fragment is named 'layout' not 'head'/'navbar' individually, 
+     but previously I defined fragments individually. 
+     I will use include syntax for head/navbar instead to be safe with the previous step.
+-->
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <!-- Hero Banner -->
+        <div class="hero-header text-center text-md-start">
+            <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div>
+                    <h2 class="hero-title" th:text="'Bienvenue, ' + ${userName}">Bienvenue</h2>
+                    <p class="mb-0 opacity-75">Gérez vos projets de recherche et suivez leur avancement.</p>
+                </div>
+                <a th:href="@{/projets/nouveau}" class="btn btn-action mt-3 mt-md-0">
+                    <i class="bi bi-plus-circle me-2"></i> Déclarer un Projet
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container dashboard-container" style="margin-top: -30px;">
+
+            <div class="custom-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark mb-0">Mes Projets</h4>
+                    <form th:action="@{/projets/mes-projets}" method="get" class="d-flex">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="keyword" class="form-control border-start-0 ps-0"
+                                placeholder="Rechercher..." th:value="${keyword}">
+                            <button type="submit" class="btn btn-primary">Filtrer</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="text-muted small mb-4">
+                    <i class="bi bi-info-circle me-1"></i> Seuls vos projets sont visibles ici
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-custom">
+                        <thead>
+                            <tr>
+                                <th>Titre du Projet</th>
+                                <th>Domaine</th>
+                                <th>Statut</th>
+                                <th>Progression</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${projets}">
+                                <td>
+                                    <div class="fw-bold text-dark" th:text="${p.titre}">IA Médicale</div>
+                                    <small class="text-muted" th:text="${p.institution}">ESMT</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border"
+                                        th:text="${p.domaineNom != null ? p.domaineNom : 'N/A'}">Santé</span>
+                                </td>
+                                <td>
+                                    <span th:class="'status-badge ' + 
+                                (${p.statut} == 'En cours' ? 'status-en-cours' : 
+                                (${p.statut} == 'Terminé' ? 'status-termine' : 'status-suspendu'))"
+                                        th:text="${p.statut}">En Cours</span>
+                                </td>
+                                <td style="width: 25%;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress w-100" style="height: 8px;">
+                                            <div class="progress-bar rounded-pill" role="progressbar"
+                                                th:style="'width: ' + ${p.niveauAvancement} + '%; background-color: var(--primary-blue-light);'"
+                                                th:aria-valuenow="${p.niveauAvancement}" aria-valuemin="0"
+                                                aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="text-muted" th:text="${p.niveauAvancement} + '%'"></small>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{/projets/modifier/{id}(id=${p.id})}"
+                                        class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil"></i></a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(projets)}">
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="bi bi-folder2-open display-4 text-muted d-block mb-3"></i>
+                                    <p class="text-muted">Aucun projet déclaré pour le moment.</p>
+                                    <a th:href="@{/projets/nouveau}" class="btn btn-sm btn-outline-primary">Commencer
+                                        maintenant</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>

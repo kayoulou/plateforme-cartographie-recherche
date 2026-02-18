@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Déclarer un Projet')}">
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <div class="hero-header">
+            <div class="container">
+                <h2 class="hero-title" th:text="${projet.id == null ? 'Nouveau Projet' : 'Modifier le Projet'}">Projet
+                </h2>
+                <p class="mb-0 opacity-75"
+                    th:text="${projet.id == null ? 'Renseignez les informations de votre projet de recherche.' : 'Mettez à jour les informations de votre projet.'}">
+                    Info</p>
+            </div>
+        </div>
+
+        <div class="container dashboard-container" style="margin-top: -30px;">
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="custom-card">
+
+                        <form th:action="@{/projets/enregistrer}" method="post" th:object="${projet}">
+                            <input type="hidden" th:field="*{id}" />
+
+                            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-info-circle me-2"></i>Informations
+                                Générales</h5>
+
+                            <div class="mb-3">
+                                <label for="titre" class="form-label">Titre du Projet</label>
+                                <input type="text" class="form-control" id="titre" th:field="*{titre}" required
+                                    placeholder="Ex: Impact de l'IA sur l'agriculture"
+                                    th:classappend="${#fields.hasErrors('titre')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('titre')}"
+                                    th:errors="*{titre}">
+                                    Erreur titre
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" th:field="*{description}" rows="4"
+                                    required placeholder="Résumé des objectifs et de la méthodologie..."
+                                    th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}"
+                                    th:errors="*{description}">
+                                    Erreur description
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="domaine" class="form-label">Domaine de Recherche</label>
+                                    <select class="form-select" id="domaine" th:field="*{domaineId}" required
+                                        th:classappend="${#fields.hasErrors('domaineId')} ? 'is-invalid' : ''">
+                                        <option value="" disabled selected>Choisir...</option>
+                                        <option th:each="d : ${domaines}" th:value="${d.id}" th:text="${d.nom}">Nom du
+                                            Domaine</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('domaineId')}"
+                                        th:errors="*{domaineId}">
+                                        Erreur domaine
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="institution" class="form-label">Institution de Rattachement</label>
+                                    <input type="text" class="form-control" id="institution" th:field="*{institution}"
+                                        required placeholder="Ex: ESMT, UCAD..."
+                                        th:classappend="${#fields.hasErrors('institution')} ? 'is-invalid' : ''">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('institution')}"
+                                        th:errors="*{institution}">
+                                        Erreur institution
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3"
+                                th:if="${#authorization.expression('hasAnyRole(''ADMIN'', ''GESTIONNAIRE'')')}">
+                                <label for="responsable" class="form-label">Responsable du Projet</label>
+                                <select class="form-select" id="responsable" th:field="*{responsableId}">
+                                    <option value="">Sélectionner un responsable...</option>
+                                    <option th:each="u : ${utilisateurs}" th:value="${u.id}"
+                                        th:text="${u.prenom + ' ' + u.nom + ' (' + u.email + ')'}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3"
+                                th:if="${#authorization.expression('hasAnyRole(''ADMIN'', ''GESTIONNAIRE'')')}">
+                                <label for="participants" class="form-label">Participants (Candidats)</label>
+                                <select class="form-select" id="participants" th:field="*{participantIds}" multiple
+                                    size="5">
+                                    <option th:each="u : ${utilisateurs}" th:value="${u.id}"
+                                        th:text="${u.prenom + ' ' + u.nom + ' (' + u.email + ')'}">
+                                    </option>
+                                </select>
+                                <div class="form-text">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs participants.
+                                </div>
+                            </div>
+
+                            <hr class="my-4 text-muted">
+
+                            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-event me-2"></i>Calendrier &
+                                Budget</h5>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="dateDebut" class="form-label">Date de Début</label>
+                                    <input type="date" class="form-control" id="dateDebut" th:field="*{dateDebut}"
+                                        required th:classappend="${#fields.hasErrors('dateDebut')} ? 'is-invalid' : ''">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('dateDebut')}"
+                                        th:errors="*{dateDebut}">
+                                        Erreur date début
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="dateFin" class="form-label">Date de Fin (Estimée)</label>
+                                    <input type="date" class="form-control" id="dateFin" th:field="*{dateFin}" required
+                                        th:classappend="${#fields.hasErrors('dateFin')} ? 'is-invalid' : ''">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('dateFin')}"
+                                        th:errors="*{dateFin}">
+                                        Erreur date fin
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="budget" class="form-label">Budget Estimé (FCFA)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="budget" th:field="*{budgetEstime}"
+                                            required min="0"
+                                            th:classappend="${#fields.hasErrors('budgetEstime')} ? 'is-invalid' : ''">
+                                        <span class="input-group-text">FCFA</span>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('budgetEstime')}"
+                                            th:errors="*{budgetEstime}">
+                                            Erreur budget
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="avancement" class="form-label">Niveau d'Avancement (%)</label>
+                                    <input type="range" class="form-range" id="avancement"
+                                        th:field="*{niveauAvancement}" min="0" max="100"
+                                        oninput="this.nextElementSibling.value = this.value + '%'">
+                                    <output class="fw-bold text-primary">0%</output>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="statut" class="form-label">Statut Actuel</label>
+                                <select class="form-select" id="statut" th:field="*{statut}">
+                                    <option value="En cours">En cours</option>
+                                    <option value="Terminé">Terminé</option>
+                                    <option value="Suspendu">Suspendu</option>
+                                </select>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/projets/mes-projets}" class="btn btn-light">Annuler</a>
+                                <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-2"></i>
+                                    Enregistrer le Projet</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>

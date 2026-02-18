@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::.content}, 'Gestion des Utilisateurs')}">
+
+<head th:replace="~{fragments/layout :: head}"></head>
+
+<body>
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="content">
+
+        <div class="hero-header">
+            <div class="container">
+                <h2 class="hero-title">Gestion des Utilisateurs</h2>
+                <p class="mb-0 opacity-75">Administrez les comptes et les accès à la plateforme.</p>
+            </div>
+        </div>
+
+        <div class="container dashboard-container" style="margin-top: -30px;">
+
+            <div class="custom-card">
+
+                <!-- Alerts -->
+                <div th:if="${syncMessage}" class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i><span th:text="${syncMessage}">Résultat Sync</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${param.updated}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>Utilisateur mis à jour avec succès.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${param.statusChanged}" class="alert alert-success alert-dismissible fade show"
+                    role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>Statut modifié avec succès.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${param.deleted}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-trash-fill me-2"></i>Utilisateur supprimé avec succès.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>Opération effectuée avec succès.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-dark mb-0"><i class="bi bi-people me-2"></i>Utilisateurs Inscrits</h4>
+
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/admin/users/new}"
+                            class="btn btn-primary btn-sm d-flex align-items-center text-nowrap">
+                            <i class="bi bi-person-plus me-2"></i> Nouveau
+                        </a>
+
+                        <form th:action="@{/admin/users/sync}" method="post"
+                            onsubmit="return confirm('Synchroniser les utilisateurs locaux vers Keycloak ?');">
+                            <button type="submit"
+                                class="btn btn-warning text-white btn-sm d-flex align-items-center text-nowrap"
+                                title="Synchroniser avec Keycloak">
+                                <i class="bi bi-cloud-arrow-up me-2"></i> Sync Cloud
+                            </button>
+                        </form>
+
+                        <form action="/admin/users" method="get" class="input-group w-auto">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="keyword" class="form-control border-start-0 ps-0"
+                                placeholder="Rechercher un utilisateur..." th:value="${keyword}">
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Email</th>
+                                <th>Rôle Actuel</th>
+                                <th>Modifier le Rôle</th>
+                                <th>Statut</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="u : ${utilisateurs}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle me-3"
+                                            th:text="${#strings.substring(u.prenom,0,1) + #strings.substring(u.nom,0,1)}">
+                                            JD</div>
+                                        <div>
+                                            <div class="fw-bold text-dark" th:text="${u.prenom + ' ' + u.nom}">Jean
+                                                Dupont</div>
+                                            <small class="text-muted" th:text="${'ID: ' + u.id}">ID: 123</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td th:text="${u.email}">jean.dupont@example.com</td>
+                                <td>
+                                    <span th:class="'badge ' + 
+                                (${u.libelleRole} == 'ADMIN' ? 'bg-danger' : 
+                                (${u.libelleRole} == 'GESTIONNAIRE' ? 'bg-warning text-dark' : 'bg-info text-dark'))"
+                                        th:text="${u.libelleRole}">CANDIDAT</span>
+                                </td>
+                                <td>
+                                    <form th:action="@{/admin/users/role}" method="post" class="d-flex gap-2">
+                                        <input type="hidden" name="id" th:value="${u.id}" />
+                                        <select name="role" class="form-select form-select-sm" style="width: 140px;">
+                                            <option value="CANDIDAT" th:selected="${u.libelleRole == 'CANDIDAT'}">
+                                                Candidat</option>
+                                            <option value="GESTIONNAIRE"
+                                                th:selected="${u.libelleRole == 'GESTIONNAIRE'}">Gestionnaire</option>
+                                            <option value="ADMIN" th:selected="${u.libelleRole == 'ADMIN'}">Admin
+                                            </option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-outline-primary"><i
+                                                class="bi bi-check-lg"></i></button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <span th:if="${u.actif}" class="badge bg-success">Actif</span>
+                                    <span th:unless="${u.actif}" class="badge bg-secondary">Inactif</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <!-- Toggle Status -->
+                                        <form th:action="@{/admin/users/toggle-status}" method="post"
+                                            style="display:inline;">
+                                            <input type="hidden" name="id" th:value="${u.id}" />
+                                            <button type="submit" class="btn btn-sm btn-light"
+                                                th:classappend="${u.actif ? 'text-danger' : 'text-success'}"
+                                                th:title="${u.actif ? 'Désactiver' : 'Activer'}">
+                                                <i th:class="${u.actif ? 'bi bi-person-x' : 'bi bi-person-check'}"></i>
+                                            </button>
+                                        </form>
+
+                                        <!-- Edit -->
+                                        <a th:href="@{/admin/users/edit/{id}(id=${u.id})}"
+                                            class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <!-- Delete -->
+                                        <form th:action="@{/admin/users/delete}" method="post"
+                                            onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.');">
+                                            <input type="hidden" name="id" th:value="${u.id}" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a th:href="@{/admin/dashboard}" class="btn btn-link text-muted"><i class="bi bi-arrow-left me-1"></i>
+                    Retour au tableau de bord</a>
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+
+</html>
