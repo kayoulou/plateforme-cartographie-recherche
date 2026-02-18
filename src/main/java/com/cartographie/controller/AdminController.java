@@ -2,6 +2,10 @@ package com.cartographie.controller;
 
 import com.cartographie.service.IAdminService;
 import com.cartographie.repository.UtilisateurRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.cartographie.repository.ProjetRepository;
 import com.cartographie.repository.DomaineRepository;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@Tag(name = "Administration", description = "Gestion des utilisateurs et configurations")
 public class AdminController {
     private final IAdminService adminService;
     private final UtilisateurRepository utilisateurRepository;
@@ -30,6 +35,7 @@ public class AdminController {
     private final com.cartographie.service.KeycloakSyncService keycloakSyncService;
 
     @GetMapping("/users")
+    @Operation(summary = "Lister les utilisateurs", description = "Affiche la liste paginée et filtrable des utilisateurs")
     public String listeUtilisateurs(Model model, @RequestParam(required = false) String keyword) {
         model.addAttribute("utilisateurs", adminService.getAllUsers(keyword));
         model.addAttribute("keyword", keyword);
@@ -37,6 +43,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/sync")
+    @Hidden
     public String syncKeycloakUsers(org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         String result = keycloakSyncService.syncUsersToKeycloak();
         redirectAttributes.addFlashAttribute("syncMessage", result);
@@ -44,6 +51,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/role")
+    @Operation(summary = "Changer le rôle d'un utilisateur", description = "Modifie le rôle (ADMIN, GESTIONNAIRE, CANDIDAT) d'un utilisateur")
     public String changerRole(@RequestParam Long id, @RequestParam String role) {
         adminService.updateRole(id, role);
         auditService.log("ROLE_CHANGE", "User ID " + id + " changed to " + role);
@@ -51,6 +59,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/toggle-status")
+    @Hidden
     public String toggleStatus(@RequestParam Long id) {
         adminService.toggleUserStatus(id);
         auditService.log("USER_STATUS_TOGGLE", "Toggled status for User ID " + id);
@@ -58,6 +67,7 @@ public class AdminController {
     }
 
     @GetMapping("/users/new")
+    @Hidden
     public String newUserForm(Model model) {
         com.cartographie.dto.UtilisateurDto dto = new com.cartographie.dto.UtilisateurDto();
         dto.setLibelleRole("CANDIDAT"); // Default
@@ -66,6 +76,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/create")
+    @Hidden
     public String createUser(
             @org.springframework.web.bind.annotation.ModelAttribute com.cartographie.dto.UtilisateurDto dto,
             Model model) {
@@ -87,6 +98,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/update")
+    @Hidden
     public String updateUser(
             @org.springframework.web.bind.annotation.ModelAttribute com.cartographie.dto.UtilisateurDto dto) {
         adminService.updateUser(dto.getId(), dto);
@@ -95,6 +107,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/delete")
+    @Hidden
     public String deleteUser(@RequestParam Long id) {
         adminService.deleteUser(id);
         auditService.log("USER_DELETE", "Deleted user ID " + id);
@@ -102,6 +115,7 @@ public class AdminController {
     }
 
     @GetMapping("/dashboard")
+    @Hidden
     public String dashboard(Model model) {
         // 1. Chiffres clés (KPIs)
         long totalUtilisateurs = utilisateurRepository.count();
@@ -148,6 +162,7 @@ public class AdminController {
     }
 
     @GetMapping("/stats")
+    @Hidden
     public String statistiques(Model model) {
         // Populate model with dashboard data (KPIs, Stats)
         dashboard(model);
@@ -160,6 +175,7 @@ public class AdminController {
     // ... existing code ...
 
     @GetMapping("/config")
+    @Hidden
     public String configuration(Model model) {
         model.addAttribute("domaines", domaineRepository.findAll());
 
@@ -177,6 +193,7 @@ public class AdminController {
     }
 
     @PostMapping("/config/save")
+    @Operation(summary = "Sauvegarder la configuration", description = "Met à jour les paramètres globaux (Année scolaire, Budget)")
     public String saveConfig(@RequestParam String anneeScolaire, @RequestParam(required = false) String budgetGlobal) {
         configRepo.save(new com.cartographie.model.Configuration("ANNEE_SCOLAIRE", anneeScolaire));
 
@@ -190,6 +207,7 @@ public class AdminController {
     private final com.cartographie.service.CsvService csvService;
 
     @PostMapping("/projets/import")
+    @Hidden
     public String importProjets(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         if (file.isEmpty()) {
             return "redirect:/admin/config?error=empty";
@@ -207,6 +225,7 @@ public class AdminController {
     // ... existing code ...
 
     @PostMapping("/domaines/add")
+    @Hidden
     public String ajouterDomaine(@RequestParam String nom, @RequestParam(required = false) String description) {
         adminService.createDomaine(nom, description);
         auditService.log("DOMAIN_CREATE", "Created domain: " + nom);
@@ -214,6 +233,7 @@ public class AdminController {
     }
 
     @PostMapping("/domaines/edit")
+    @Hidden
     public String modifierDomaine(@RequestParam Long id, @RequestParam String nom,
             @RequestParam(required = false) String description) {
         adminService.updateDomaine(id, nom, description);
@@ -222,6 +242,7 @@ public class AdminController {
     }
 
     @PostMapping("/domaines/delete")
+    @Hidden
     public String supprimerDomaine(@RequestParam Long id) {
         adminService.deleteDomaine(id);
         auditService.log("DOMAIN_DELETE", "Deleted domain ID " + id);
@@ -229,6 +250,7 @@ public class AdminController {
     }
 
     @GetMapping("/audit")
+    @Hidden
     public String viewAuditLogs(Model model) {
         model.addAttribute("logs", auditService.getAllLogs());
         return "admin/audit";

@@ -2,6 +2,9 @@ package com.cartographie.controller;
 
 import com.cartographie.service.IProjetService;
 import com.cartographie.service.AuditService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import com.cartographie.dto.ProjetDto;
 import jakarta.validation.Valid;
@@ -16,6 +19,7 @@ import org.springframework.ui.Model;
 
 @Controller
 @RequestMapping("/projets")
+@Tag(name = "Projets", description = "Gestion des projets de recherche")
 // @RequiredArgsConstructor
 public class ProjetController {
     // On injecte l'interface pour respecter le principe d'abstraction
@@ -42,6 +46,7 @@ public class ProjetController {
     // voient tout)
     @GetMapping("/mes-projets")
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Lister mes projets", description = "Affiche les projets de l'utilisateur connecté ou tous si admin/gestionnaire")
     public String voirMesProjets(Model model, Authentication auth,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String keyword) {
         String email = getEmailFromAuth(auth);
@@ -75,6 +80,7 @@ public class ProjetController {
     // Route pour Gestionnaire/Admin : Voir tout
     @GetMapping("/tous")
     @PreAuthorize("hasAnyRole('GESTIONNAIRE', 'ADMIN')")
+    @Operation(summary = "Lister tous les projets", description = "Vue globale filtrable pour les gestionnaires et administrateurs")
     public String voirTousLesProjets(Model model,
             @org.springframework.web.bind.annotation.RequestParam(name = "keyword", required = false) String keyword,
             @org.springframework.web.bind.annotation.RequestParam(name = "statut", required = false) String statut,
@@ -89,6 +95,7 @@ public class ProjetController {
 
     @GetMapping("/nouveau")
     @PreAuthorize("hasAnyRole('CANDIDAT', 'GESTIONNAIRE', 'ADMIN')")
+    @Hidden
     public String formulaire(Model model) {
         model.addAttribute("projet", new ProjetDto());
         model.addAttribute("domaines", domaineRepository.findAll());
@@ -115,6 +122,7 @@ public class ProjetController {
 
     @PostMapping("/enregistrer")
     @PreAuthorize("hasAnyRole('CANDIDAT', 'GESTIONNAIRE', 'ADMIN')")
+    @Operation(summary = "Enregistrer un projet", description = "Crée ou met à jour un projet avec validation des données")
     public String enregistrer(@Valid @ModelAttribute("projet") ProjetDto dto,
             BindingResult result,
             Model model,
@@ -173,6 +181,7 @@ public class ProjetController {
 
     @GetMapping("/modifier/{id}")
     @PreAuthorize("hasAnyRole('CANDIDAT', 'GESTIONNAIRE', 'ADMIN')")
+    @Hidden
     public String editer(@org.springframework.web.bind.annotation.PathVariable("id") Long id, Model model,
             Authentication auth) {
         ProjetDto dto = projetService.findById(id);
@@ -184,6 +193,7 @@ public class ProjetController {
 
     @GetMapping("/details/{id}")
     @PreAuthorize("hasAnyRole('GESTIONNAIRE', 'ADMIN', 'CANDIDAT')")
+    @Hidden
     public String voirDetails(@org.springframework.web.bind.annotation.PathVariable("id") Long id, Model model) {
         model.addAttribute("projet", projetService.findById(id));
         return "projets/details";
@@ -191,6 +201,7 @@ public class ProjetController {
 
     @PostMapping("/supprimer")
     @PreAuthorize("hasRole('ADMIN')")
+    @Hidden
     public String supprimerProjet(@org.springframework.web.bind.annotation.RequestParam("id") Long id,
             Authentication auth) {
         projetService.delete(id);
